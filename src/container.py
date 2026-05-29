@@ -36,3 +36,14 @@ def build_interactor(backend: str, now=time.time) -> PlayerInteractor:
 def build_controller(backend: str, now=time.time) -> PlayerController:
     """CLI用Adapter(コントローラ)を組み立てて返す。"""
     return PlayerController(build_interactor(backend, now=now))
+
+
+def build_app(backend: str, now=time.time):
+    """HTTP用Adapter(FastAPIアプリ)を組み立てて返す。
+
+    CLIと全く同じ UseCase(PlayerInteractor) を、別のAdapterに注入するだけ。
+    内側(UseCase/Domain)のコードは1行も変えていない。
+    """
+    # ここで初めて FastAPI を import (外側の詳細を Infrastructure側に閉じ込める)
+    from src.adapter.http_controller import create_app
+    return create_app(build_interactor(backend, now=now))
