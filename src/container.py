@@ -47,3 +47,18 @@ def build_app(backend: str, now=time.time):
     # ここで初めて FastAPI を import (外側の詳細を Infrastructure側に閉じ込める)
     from src.adapter.http_controller import create_app
     return create_app(build_interactor(backend, now=now))
+
+
+def build_gui(backend: str, now=time.time):
+    """GUI用Adapter(Tkinterウィンドウ)を組み立てて返す。
+
+    CLI/HTTP と同じ UseCase を、3つめの Adapter (Tkinter) に注入するだけ。
+    返り値は Tk root。呼び出し側で root.mainloop() を呼ぶ。
+    """
+    # Tkinter は GUI環境がある場合のみ使える詳細。ここで初めて import する。
+    import tkinter as tk
+
+    from src.adapter.gui_view import GameWindow
+    root = tk.Tk()
+    GameWindow(root, build_interactor(backend, now=now), backend_label=backend)
+    return root
