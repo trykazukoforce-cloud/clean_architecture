@@ -2,17 +2,17 @@
 from __future__ import annotations
 
 
-class UserNotFoundError(Exception):
-    """指定idのUserが存在しない。"""
+class PlayerNotFoundError(Exception):
+    """指定idのプレイヤーが存在しない。"""
 
-    def __init__(self, user_id: int) -> None:
-        super().__init__(f"User(id={user_id}) は存在しません")
-        self.user_id = user_id
+    def __init__(self, player_id: int) -> None:
+        super().__init__(f"Player(id={player_id}) は存在しません")
+        self.player_id = player_id
 
 
-class EmailAlreadyExistsError(Exception):
-    """同一emailのUserが既に存在する (アプリケーション業務規則)。"""
+class NameAlreadyExistsError(Exception):
+    """同名プレイヤーが既に存在する (アプリケーション業務規則)。"""
 
-    def __init__(self, email: str) -> None:
-        super().__init__(f"email={email!r} は既に登録済みです")
-        self.email = email
+    def __init__(self, name: str) -> None:
+        super().__init__(f"名前 {name!r} は既に使われています")
+        self.name = name

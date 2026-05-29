@@ -1,23 +1,20 @@
-"""Infrastructure層: ローカルJSONファイルによる UserRepository 実装
+"""Infrastructure層: ローカルJSONファイルによる PlayerRepository 実装
 
-SQLite版と全く同じ UserRepository(ポート)を実装する。
+SQLite版と全く同じ PlayerRepository(ポート)を実装する。
 内側(UseCase)から見れば SQLite版と区別がつかない = 完全に差し替え可能。
-json への依存はこのファイルに限定される。
-
-このコミットでは UseCase / Domain / 既存 SQLite実装 を 1行も変更していない。
-新しい実装クラスを増やすだけで「保存先の選択肢」を増やせる ―― これがDIP の効果。
+json 依存はこのファイルに限定。
 """
 from __future__ import annotations
 
 import json
 import os
 
-from src.domain.user import User
-from src.usecase.repository import UserRepository
+from src.domain.player import Player
+from src.usecase.repository import PlayerRepository
 
 
-class JsonUserRepository(UserRepository):
-    def __init__(self, file_path: str = "users.json") -> None:
+class JsonPlayerRepository(PlayerRepository):
+    def __init__(self, file_path: str = "players.json") -> None:
         self._path = file_path
         if not os.path.exists(self._path):
             self._save([])
@@ -35,36 +32,45 @@ class JsonUserRepository(UserRepository):
         return max((r["id"] for r in records), default=0) + 1
 
     @staticmethod
-    def _to_user(record: dict) -> User:
-        return User(id=record["id"], name=record["name"], email=record["email"])
+    def _to_player(r: dict) -> Player:
+        return Player(
+            id=r["id"], name=r["name"], level=r["level"],
+            exp=r["exp"], gold=r["gold"], last_seen=r["last_seen"],
+        )
 
-    # ---- UserRepository 実装 -----------------------------------------
-    def create(self, user: User) -> User:
+    @staticmethod
+    def _to_record(p: Player) -> dict:
+        return {
+            "id": p.id, "name": p.name, "level": p.level,
+            "exp": p.exp, "gold": p.gold, "last_seen": p.last_seen,
+        }
+
+    # ---- PlayerRepository 実装 ---------------------------------------
+    def create(self, player: Player) -> Player:
         records = self._load()
-        user.id = self._next_id(records)
-        records.append({"id": user.id, "name": user.name, "email": user.email})
+        player.id = self._next_id(records)
+        records.append(self._to_record(player))
         self._save(records)
-        return user
+        return player
 
-    def find_by_id(self, user_id: int) -> User | None:
+    def find_by_id(self, player_id: int) -> Player | None:
         for r in self._load():
-            if r["id"] == user_id:
-                return self._to_user(r)
+            if r["id"] == player_id:
+                return self._to_player(r)
         return None
 
-    def list_all(self) -> list[User]:
-        return [self._to_user(r) for r in sorted(self._load(), key=lambda r: r["id"])]
+    def list_all(self) -> list[Player]:
+        return [self._to_player(r) for r in sorted(self._load(), key=lambda r: r["id"])]
 
-    def update(self, user: User) -> User:
+    def update(self, player: Player) -> Player:
         records = self._load()
-        for r in records:
-            if r["id"] == user.id:
-                r["name"] = user.name
-                r["email"] = user.email
+        for i, r in enumerate(records):
+            if r["id"] == player.id:
+                records[i] = self._to_record(player)
                 break
         self._save(records)
-        return user
+        return player
 
-    def delete(self, user_id: int) -> None:
-        records = [r for r in self._load() if r["id"] != user_id]
+    def delete(self, player_id: int) -> None:
+        records = [r for r in self._load() if r["id"] != player_id]
         self._save(records)
